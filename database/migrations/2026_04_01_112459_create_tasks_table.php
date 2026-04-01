@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->foreign('column_id')->references('id')->on('columns')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
-            $table->integer('order_position');
+            $table->integer('order_position')->default(0);
             $table->timestamps();
         });
     }

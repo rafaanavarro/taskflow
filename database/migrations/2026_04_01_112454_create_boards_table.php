@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('title');
-            $table->string('color_bg');
+            $table->string('color_bg')->default('bg-gray-100');
             $table->timestamps();
         });
     }

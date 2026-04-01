@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('board_id');
             $table->foreign('board_id')->references('id')->on('boards')->onDelete('cascade');
             $table->string('title');
-            $table->integer('order_position');
+            $table->integer('order_position')->default(0);
             $table->timestamps();
         });
     }
