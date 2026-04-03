@@ -62,7 +62,7 @@ class KanbanBoard extends Component
     // Función para crear la tarea
     public function addTask() 
     {
-        $this->validate();
+        $this->validate(); // revisa las rules de arriba
 
         Task::create([
             'column_id' => $this->column_id,
@@ -73,5 +73,13 @@ class KanbanBoard extends Component
 
         $this->closeModal();
         $this->loadBoard(); // Refrescamos el tablero para ver la nueva tarea
+    }
+
+    
+    public function destroyTask($taskid) 
+    {
+        $task = Task::find($taskid);
+        $task->delete();
+        $this->loadBoard();
     }
 }
