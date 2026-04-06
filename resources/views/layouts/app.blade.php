@@ -34,6 +34,8 @@
             {{ $slot }}
         </main>
     </div>
+    <!--   Script para arrastrar y soltar-->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </body>
 
 </html>

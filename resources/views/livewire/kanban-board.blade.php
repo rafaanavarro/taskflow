@@ -7,38 +7,59 @@
         <div class="flex items-start gap-6 pb-4 overflow-x-auto">
 
             @foreach ($board->columns as $column)
-                <div wire:key="column-{{ $column->id }}"
-                    class="w-80 shrink-0 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                <div wire:key="column-{{ $column->id }}" class="w-80 shrink-0 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
 
                     <h3 class="mb-4 font-semibold text-gray-700 dark:text-gray-200">
                         {{ $column->title }}
                     </h3>
 
-                    <div class="flex flex-col gap-3">
+                    <div wire:key="task-list-{{ $column->id }}" data-column-id="{{ $column->id }}"
+                        class="flex flex-col gap-3 task-list" style="min-height: 50px;" x-data x-init="
+                                    Sortable.create($el, {
+                                        group: 'kanban',
+                                        animation: 150,
+                                        ghostClass: 'opacity-50',
+                                        draggable: '[data-task-id]',
+
+                                        onEnd: (evt) => {
+                                            // 1. Capturamos los datos ANTES de revertir el DOM
+                                            const toColumnId = evt.to.dataset.columnId;
+                                            const toTaskIds = [...evt.to.querySelectorAll('[data-task-id]')]
+                                                .map(el => el.dataset.taskId);
+
+                                            // 2. Revertimos el movimiento del DOM para que Livewire no entre
+                                            //    en conflicto con su motor de morphing
+                                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+
+                                            // 3. Ahora sí, enviamos al servidor
+                                            $wire.updateTaskOrder(toTaskIds, toColumnId);
+                                        }
+                                    });
+                                ">
+
                         @foreach ($column->tasks as $task)
-                            <div wire:key="task-{{ $task->id }}"
-                                class="p-3 bg-white border border-gray-200 rounded shadow-sm cursor-pointer dark:bg-gray-700 dark:border-gray-600 hover:shadow-md transition-shadow">
-                                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">
+                            <div wire:key="task-{{ $task->id }}" data-task-id="{{ $task->id }}"
+                                class="select-none relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-grab active:cursor-grabbing dark:bg-gray-700 dark:border-gray-600 hover:shadow-md transition-shadow group">
+
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-100 pr-6">
                                     {{ $task->title }}
                                 </p>
 
-
-
                                 @if ($task->description)
-                                    <p class="mt-1 text-xs text-gray-500 truncate dark:text-gray-400">
+                                    <p class="mt-2 text-xs text-gray-500 truncate dark:text-gray-400">
                                         {{ $task->description }}
                                     </p>
-                                    <button wire:click="destroyTask({{ $task->id }})">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor"
-                                            class="w-5 h-5 text-gray-400 transition-colors hover:text-red-500 cursor-pointer">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                        </svg>
-                                    </button>
                                 @endif
 
-                                <!--Boton eliminar-->
+                                <button wire:click="destroyTask({{ $task->id }})"
+                                    class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                        stroke="currentColor"
+                                        class="w-4 h-4 text-gray-400 transition-colors hover:text-red-500 cursor-pointer">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                </button>
                             </div>
                         @endforeach
                     </div>
@@ -74,8 +95,8 @@
                             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                             <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                                 viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
                             </svg>
                             <span class="sr-only">Cerrar modal</span>
                         </button>

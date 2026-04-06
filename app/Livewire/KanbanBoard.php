@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class KanbanBoard extends Component
 {
     public $board;
-    
+
     // Variables para el modal y el formulario
     public $isModalOpen = false;
     public $column_id;
@@ -29,10 +29,19 @@ class KanbanBoard extends Component
         $this->loadBoard();
     }
 
-    // Método extraído para recargar el tablero fácilmente después de añadir una tarea
+
     public function loadBoard()
     {
-        $this->board = Board::with(['columns.tasks'])
+        // Cargamos el tablero del usuario, pero le decimos que nos traiga
+        // las columnas y las tareas ORDENADAS por la columna 'order_position'
+        $this->board = Board::with([
+            'columns' => function ($query) {
+                $query->orderBy('order_position');
+            },
+            'columns.tasks' => function ($query) {
+                $query->orderBy('order_position');
+            }
+        ])
             ->where('user_id', Auth::id())
             ->first();
     }
@@ -60,26 +69,50 @@ class KanbanBoard extends Component
     }
 
     // Función para crear la tarea
-    public function addTask() 
+    public function addTask()
     {
-        $this->validate(); // revisa las rules de arriba
+        $this->validate();
+
+        // Buscamos cuál es la posición más alta actual en esa columna
+        $maxPosition = Task::where('column_id', $this->column_id)->max('order_position');
 
         Task::create([
             'column_id' => $this->column_id,
             'title' => $this->newTaskTitle,
             'description' => $this->newTaskDescription,
-            // 'order' => 0 // Descomenta y ajusta si tienes un campo de ordenamiento
+            'order_position' => $maxPosition !== null ? $maxPosition + 1 : 0 // Lo ponemos al final
         ]);
 
         $this->closeModal();
-        $this->loadBoard(); // Refrescamos el tablero para ver la nueva tarea
+        $this->loadBoard();
     }
 
-    
-    public function destroyTask($taskid) 
+
+    public function destroyTask($taskid)
     {
         $task = Task::find($taskid);
         $task->delete();
+        $this->loadBoard();
+    }
+
+    public function updateTaskOrder($orderedIds, $columnId)
+    {
+        // Si por lo que sea no nos llegan IDs, no hacemos nada para que no pete
+        if (empty($orderedIds)) {
+            return;
+        }
+
+        // Recorremos el array. $index será 0, 1, 2... (la posición en la lista)
+        foreach ($orderedIds as $index => $taskId) {
+
+            // Hacemos el update directo a la base de datos
+            Task::where('id', $taskId)->update([
+                'column_id' => $columnId,
+                'order_position' => $index
+            ]);
+        }
+
+        // Recargamos el tablero entero para ver el resultado oficial
         $this->loadBoard();
     }
 }
