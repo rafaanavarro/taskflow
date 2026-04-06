@@ -13,29 +13,34 @@
                         {{ $column->title }}
                     </h3>
 
+                    <!-- el x-data es de Alpine.js y se usa para especificar que vamos a poner codigo js y el x-init es para inicializar el script de Sortable.js-->
                     <div wire:key="task-list-{{ $column->id }}" data-column-id="{{ $column->id }}"
-                        class="flex flex-col gap-3 task-list" style="min-height: 50px;" x-data x-init="
-                                    Sortable.create($el, {
-                                        group: 'kanban',
-                                        animation: 150,
-                                        ghostClass: 'opacity-50',
-                                        draggable: '[data-task-id]',
+                        class="flex flex-col gap-3 task-list" style="min-height: 50px;" x-data
+                        x-init="
+                                                                                                                                        // $el es como el this basicamente
+                                                                                                                                            Sortable.create($el, {
+                                                                                                                                                group: 'kanban', // obligatorio si queremos que poder mover tareas entre columnas
+                                                                                                                                                animation: 150, 
+                                                                                                                                                ghostClass: 'opacity-50', // como la vista previa por decirlo asi
+                                                                                                                                                draggable: '[data-task-id]', // le dice a sortable que solo puede mover elementos que tengan este atributo
 
-                                        onEnd: (evt) => {
-                                            // 1. Capturamos los datos ANTES de revertir el DOM
-                                            const toColumnId = evt.to.dataset.columnId;
-                                            const toTaskIds = [...evt.to.querySelectorAll('[data-task-id]')]
-                                                .map(el => el.dataset.taskId);
+                                                                                                                                                // función que se ejecuta cuando termina de mover una tarea
+                                                                                                                                                // evt es un objeto que contiene información sobre el movimiento
+                                                                                                                                                onEnd: (evt) => {
 
-                                            // 2. Revertimos el movimiento del DOM para que Livewire no entre
-                                            //    en conflicto con su motor de morphing
-                                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+                                                                                                                                                    const toColumnId = evt.to.dataset.columnId;
+                                                                                                                                                    // Recorremos todos los elementos que tengan el atributo data-task-id y los guardamos en un array (guardamos las ids)
+                                                                                                                                                    const toTaskIds = [...evt.to.querySelectorAll('[data-task-id]')]
+                                                                                                                                                        .map(el => el.dataset.taskId);
 
-                                            // 3. Ahora sí, enviamos al servidor
-                                            $wire.updateTaskOrder(toTaskIds, toColumnId);
-                                        }
-                                    });
-                                ">
+                                                                                                                                                    // en esta linea lo que hacemos es revertir el movimiento a ojos de livewire para que no entre en conflicto
+                                                                                                                                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+
+                                                                                                                                                    // y se llamamos a la funcion del controlador
+                                                                                                                                                    $wire.updateTaskOrder(toTaskIds, toColumnId);
+                                                                                                                                                }
+                                                                                                                                            });
+                                                                                                                                        ">
 
                         @foreach ($column->tasks as $task)
                             <div wire:key="task-{{ $task->id }}" data-task-id="{{ $task->id }}"

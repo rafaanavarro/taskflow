@@ -102,13 +102,13 @@ class KanbanBoard extends Component
             return;
         }
 
-        // Recorremos el array. $index será 0, 1, 2... (la posición en la lista)
+        // Recorremos el array
         foreach ($orderedIds as $index => $taskId) {
 
             // Hacemos el update directo a la base de datos
             Task::where('id', $taskId)->update([
                 'column_id' => $columnId,
-                'order_position' => $index
+                'order_position' => $index // el orden es el index porque la lista de las tareas viene ya ordenada por Sortable.js
             ]);
         }
 
