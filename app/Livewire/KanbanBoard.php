@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Board;
 use App\Models\Task; // Asegúrate de importar tu modelo Task
 use Illuminate\Support\Facades\Auth;
+use App\Models\Column;
 
 class KanbanBoard extends Component
 {
@@ -113,6 +114,28 @@ class KanbanBoard extends Component
         }
 
         // Recargamos el tablero entero para ver el resultado oficial
+        $this->loadBoard();
+    }
+
+    public function createDefaultBoard()
+    {
+        $newBoard = Board::create([
+            'user_id' => Auth::id(),
+            'title' => 'Mi Tablero Principal'
+        ]);
+
+
+        $columns = [
+            ['board_id' => $newBoard->id, 'title' => 'Pendiente', 'order_position' => 0],
+            ['board_id' => $newBoard->id, 'title' => 'En progreso', 'order_position' => 1],
+            ['board_id' => $newBoard->id, 'title' => 'Hecho', 'order_position' => 2],
+        ];
+
+        foreach ($columns as $column) {
+            Column::create($column);
+        }
+
+
         $this->loadBoard();
     }
 }

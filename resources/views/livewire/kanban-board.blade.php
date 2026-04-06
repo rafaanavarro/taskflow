@@ -13,40 +13,36 @@
                         {{ $column->title }}
                     </h3>
 
-                    <!-- el x-data es de Alpine.js y se usa para especificar que vamos a poner codigo js y el x-init es para inicializar el script de Sortable.js-->
                     <div wire:key="task-list-{{ $column->id }}" data-column-id="{{ $column->id }}"
-                        class="flex flex-col gap-3 task-list" style="min-height: 50px;" x-data
-                        x-init="
-                                                                                                                                        // $el es como el this basicamente
-                                                                                                                                            Sortable.create($el, {
-                                                                                                                                                group: 'kanban', // obligatorio si queremos que poder mover tareas entre columnas
-                                                                                                                                                animation: 150, 
-                                                                                                                                                ghostClass: 'opacity-50', // como la vista previa por decirlo asi
-                                                                                                                                                draggable: '[data-task-id]', // le dice a sortable que solo puede mover elementos que tengan este atributo
+                        class="flex flex-col gap-3 task-list" style="min-height: 50px;" x-data x-init="
+                                                                    Sortable.create($el, {
+                                                                        group: 'kanban', // obligatorio si queremos que poder mover tareas entre columnas
+                                                                        animation: 150, 
+                                                                        ghostClass: 'opacity-50', // como la vista previa por decirlo asi
+                                                                        draggable: '[data-task-id]', // le dice a sortable que solo puede mover elementos que tengan este atributo
 
-                                                                                                                                                // función que se ejecuta cuando termina de mover una tarea
-                                                                                                                                                // evt es un objeto que contiene información sobre el movimiento
-                                                                                                                                                onEnd: (evt) => {
+                                                                        // función que se ejecuta cuando termina de mover una tarea
+                                                                        onEnd: (evt) => {
+                                                                            const toColumnId = evt.to.dataset.columnId;
 
-                                                                                                                                                    const toColumnId = evt.to.dataset.columnId;
-                                                                                                                                                    // Recorremos todos los elementos que tengan el atributo data-task-id y los guardamos en un array (guardamos las ids)
-                                                                                                                                                    const toTaskIds = [...evt.to.querySelectorAll('[data-task-id]')]
-                                                                                                                                                        .map(el => el.dataset.taskId);
+                                                                            // Recorremos todos los elementos que tengan el atributo data-task-id y los guardamos en un array (guardamos las ids)
+                                                                            const toTaskIds = [...evt.to.querySelectorAll('[data-task-id]')]
+                                                                                .map(el => el.dataset.taskId);
 
-                                                                                                                                                    // en esta linea lo que hacemos es revertir el movimiento a ojos de livewire para que no entre en conflicto
-                                                                                                                                                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+                                                                            // en esta linea lo que hacemos es revertir el movimiento a ojos de livewire para que no entre en conflicto
+                                                                            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
 
-                                                                                                                                                    // y se llamamos a la funcion del controlador
-                                                                                                                                                    $wire.updateTaskOrder(toTaskIds, toColumnId);
-                                                                                                                                                }
-                                                                                                                                            });
-                                                                                                                                        ">
+                                                                            // y llamamos a la funcion del controlador
+                                                                            $wire.updateTaskOrder(toTaskIds, toColumnId);
+                                                                        }
+                                                                    });
+                                                                ">
 
                         @foreach ($column->tasks as $task)
                             <div wire:key="task-{{ $task->id }}" data-task-id="{{ $task->id }}"
                                 class="select-none relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-grab active:cursor-grabbing dark:bg-gray-700 dark:border-gray-600 hover:shadow-md transition-shadow group">
 
-                                <p class="text-sm font-medium text-gray-800 dark:text-gray-100 pr-6">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-100 pr-6 break-words">
                                     {{ $task->title }}
                                 </p>
 
@@ -81,8 +77,18 @@
 
         </div>
     @else
-        <div class="py-12 text-center">
-            <p class="text-gray-500 dark:text-gray-400">No tienes ningún tablero asignado todavía.</p>
+        <div class="py-20 text-center flex flex-col items-center justify-center">
+            <svg class="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 mb-6 text-lg">No tienes ningún tablero asignado todavía.</p>
+
+            <button wire:click="createDefaultBoard"
+                class="inline-flex items-center px-6 py-3 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-sm text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 shadow-md">
+                Crear mi primer tablero
+            </button>
         </div>
     @endif
 
