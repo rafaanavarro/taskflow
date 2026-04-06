@@ -35,5 +35,5 @@ Sigue estos pasos para levantar el proyecto en tu entorno local:
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone [https://github.com/rafaanavarro/taskflow](https://github.com/rafaanavarro/taskflow)
+   git clone https://github.com/rafaanavarro/taskflow.git
    cd taskflow
